@@ -1,0 +1,30 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.810.11
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HBD.YarpProxy", "HBD.YarpProxy.csproj", "{0008129E-5D68-4439-BD09-F6D3ACF90BDF}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SolutionFolder", "SolutionFolder", "{C3EA08C0-9996-47CF-937A-FB096AA9F2BF}"
+ProjectSection(SolutionItems) = preProject
+	docker.dockerfile = docker.dockerfile
+EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{0008129E-5D68-4439-BD09-F6D3ACF90BDF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0008129E-5D68-4439-BD09-F6D3ACF90BDF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0008129E-5D68-4439-BD09-F6D3ACF90BDF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0008129E-5D68-4439-BD09-F6D3ACF90BDF}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {048FC154-D375-4440-AE9C-667AD5BE7529}
+	EndGlobalSection
+EndGlobal

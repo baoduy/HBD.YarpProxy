@@ -1,0 +1,101 @@
+trigger:
+  branches:
+    include:
+      - main
+variables:
+  - group: share
+  - name: isMainBranch
+    value: $[or(eq(variables['Build.SourceBranch'], 'refs/heads/main'), eq(variables['Build.SourceBranch'], 'refs/heads/master'))]
+  # - name: ASPNETCORE_ENVIRONMENT
+  #   value: Development
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+stages:
+- stage: deploy_ci
+  displayName: Build & Dockerized
+  jobs:
+    - job: dockerize
+      displayName: Dockerize
+      pool:
+        vmImage: 'ubuntu-18.04'
+      condition: or(eq(variables.isDevelopBranch, true), eq(variables.isMainBranch, true))
+      steps:
+        - task: UseDotNet@2
+          displayName: Net6
+          inputs:
+            packageType: 'sdk'
+            version: '5.x'
+            includePreviewVersions: true
+        
+        - task: gitversion/setup@0
+          inputs:
+            versionSpec: '5.x'
+            includePrerelease: true
+        - task: gitversion/execute@0
+
+        - task: VariableSetTask@1
+          inputs:
+            VariableName: 'Build.BuildNumber'
+            Value: 'v$(GitVersion.Major).$(GitVersion.Minor).$(GitVersion.BuildMetaData)$(GitVersion.CommitsSinceVersionSource)'
+            IsSecret: false
+        
+        - task: CmdLine@2
+          displayName: Pull image
+          inputs:
+            script: "docker pull baoduy2412/hbd.yarp-proxy:latest"
+
+        - task: Docker@2
+          displayName: Create image
+          inputs:
+            containerRegistry: 'hbd-docker'
+            repository: 'baoduy2412/hbd.yarp-proxy'
+            command: 'build'
+            buildContext: .
+            Dockerfile: '**/docker.dockerfile'
+            tags: |
+             $(Build.BuildNumber)
+             latest
+            arguments: '--build-arg PAT=$(PAT) --cache-from=baoduy2412/hbd.yarp-proxy:latest'
+
+        # trim image with docker slim
+        # - script: |
+        #     docker image ls
+        #     brew install docker-slim
+        #     docker-slim build baoduy2412/hbd.yarp-proxy:$(Build.BuildNumber) --tag baoduy2412/hbd.yarp-proxy:$(Build.BuildNumber)
+        #     docker image ls
+        #   displayName: Docker Slim
+
+        - task: Docker@2
+          displayName: Publish image
+          inputs:
+            containerRegistry: 'hbd-docker'
+            repository: 'baoduy2412/hbd.yarp-proxy'
+            tags: |
+             $(Build.BuildNumber)
+             latest
+            command: 'push'
+
+# deploy for dev
+# - template: deploy-template.yaml
+#   parameters:
+#     environment: dev
+#     depensOn: ci
+#     succeededOn: ci
+
+# # deploy for sandbox
+# - template: deploy-template.yaml
+#   parameters: 
+#     environment: sandbox
+#     depensOn: dev
+#     succeededOn: dev
+
+# # deploy for prd
+# - template: deploy-template.yaml
+#   parameters: 
+#     environment: prd
+#     depensOn: sandbox
+#     succeededOn: sandbox
+
+

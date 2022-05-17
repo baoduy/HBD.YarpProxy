@@ -1,0 +1,7 @@
+**/.idea
+**/bin
+**/obj
+**/*.pdf
+dockerbuild.sh
+docker.dockerfile
+pipeline

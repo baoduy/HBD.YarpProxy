@@ -47,8 +47,8 @@ jobs:
         logout: true
     
     - name: Build the Docker image
-      run: docker build . --file ${{ env.Docker_File }} /
-        --tag ${{ env.Image_Name }}:latest --tag ${{ env.Image_Name }}:${{ steps.bump-semver.outputs.new_version }} /
+      run: docker build . --file ${{ env.Docker_File }}
+        --tag ${{ env.Image_Name }}:latest --tag ${{ env.Image_Name }}:${{ steps.bump-semver.outputs.new_version }}
         --build-arg PAT=${{ secrets.PACKAGE_TOKEN }}
       
     - name: Push Image to Docker Hub

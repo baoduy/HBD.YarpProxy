@@ -1,14 +1,12 @@
-name: .NET
+name: Docker
 
 on:
   push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
+    branches: [ main, master ]
 
 env:
-  Docker_File: docker.dockerfile
-  Image_Name: baoduy2412/hbd.yarp-proxy
+  Docker_File: 'docker.dockerfile'
+  Image_Name: 'baoduy2412/hbd.yarp-proxy'
   Is_Draft_Release: false
   
 jobs:

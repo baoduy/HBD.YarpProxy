@@ -1,0 +1,69 @@
+name: .NET
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+env:
+  Docker_File: docker.dockerfile
+  Image_Name: baoduy2412/hbd.yarp-proxy
+  Is_Draft_Release: false
+  
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+    
+     # Versioning
+    - name: Get version and version code
+      uses: xom9ikk/version-by-tag@v1
+      id: versioning
+      with:
+        isUseGithubRunNumber: true
+    
+    - uses: actions-ecosystem/action-bump-semver@v1
+      id: bump-semver
+      with:
+        current_version: ${{ steps.versioning.outputs.semver }}
+        level: patch
+          
+    - name: Print Version
+      run: |
+        echo "Tag: ${{ steps.versioning.outputs.tag }}"
+        echo "Semver: ${{ steps.versioning.outputs.semver }}"
+        echo "Version code: ${{ steps.versioning.outputs.versionCode }}"
+        echo "New version: ${{ steps.bump-semver.outputs.new_version }}"
+    
+    #Build and Push
+    - name: Docker Login
+      uses: docker/login-action@v2.0.0
+      with:
+        username: baoduy2412
+        password: ${{ secrets.DOCKER_TOKEN }}
+        ecr: auto
+        logout: true
+    
+    - name: Build the Docker image
+      run: docker build . --file ${{ Docker_File }} --tag ${{ Image_Name }}:latest --tag ${{ Image_Name }}:${{ steps.bump-semver.outputs.new_version }}
+      
+    - name: Push Image to Docker Hub
+      run: docker push ${{ Image_Name }}:latest
+    
+    # Create Release
+    - name: Create Release
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.PACKAGE_TOKEN }}
+      with:
+        tag_name: ${{ steps.bump-semver.outputs.new_version }}
+        release_name: Release ${{ steps.bump-semver.outputs.new_version }}
+        draft: ${{ env.Is_Draft_Release }}
+        prerelease: false
+      
+      

@@ -17,8 +17,8 @@ COPY ./HBD.YarpProxy.csproj ./HBD.YarpProxy.csproj
 RUN wget -qO- https://raw.githubusercontent.com/Microsoft/artifacts-credprovider/master/helpers/installcredprovider.sh | bash
 ARG PAT
 ENV NUGET_CREDENTIALPROVIDER_SESSIONTOKENCACHE_ENABLED true
-ENV VSS_NUGET_EXTERNAL_FEED_ENDPOINTS "{\"endpointCredentials\": [{\"endpoint\":\"https://pkgs.dev.azure.com/drunkcoding/_packaging/HBD/nuget/v3/index.json\", \"password\":\"$PAT\"}]}"
-RUN dotnet restore ./HBD.YarpProxy.csproj -s "https://api.nuget.org/v3/index.json" -s "https://pkgs.dev.azure.com/drunkcoding/_packaging/HBD/nuget/v3/index.json"
+ENV VSS_NUGET_EXTERNAL_FEED_ENDPOINTS "{\"endpointCredentials\": [{\"endpoint\":\"https://nuget.pkg.github.com/baoduy/index.json\", \"password\":\"$PAT\"}]}"
+RUN dotnet restore ./HBD.YarpProxy.csproj -s "https://api.nuget.org/v3/index.json" -s "https://nuget.pkg.github.com/baoduy/index.json"
 # Copy everying else and build app
 COPY . .
 WORKDIR /app

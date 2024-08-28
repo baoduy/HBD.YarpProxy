@@ -40,7 +40,7 @@ WORKDIR /app
 COPY --from=build /app/out ./
 
 # Install the required packages
-RUN apt-get --no-cache add ca-certificates
+RUN apt-get update && apt-get install -y ca-certificates && update-ca-certificates
 # Copy all the certificates from the certs folder
 COPY certs/* /usr/local/share/ca-certificates/
 

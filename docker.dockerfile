@@ -39,7 +39,12 @@ ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=false
 WORKDIR /app
 COPY --from=build /app/out ./
 
-# RUN sed 's/DEFAULT@SECLEVEL=2/DEFAULT@SECLEVEL=1/' /etc/ssl/openssl.cnf > /etc/ssl/openssl.cnf.changed && mv /etc/ssl/openssl.cnf.changed /etc/ssl/openssl.cnf
+# Install the required packages
+RUN apk --no-cache add ca-certificates
+# Copy all the certificates from the certs folder
+COPY certs/* /usr/local/share/ca-certificates/
+# Update the CA certificates store
+RUN update-ca-certificates
 
 EXPOSE 8080/tcp
 ENTRYPOINT ["./HBD.YarpProxy"]

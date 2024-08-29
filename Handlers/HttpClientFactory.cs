@@ -13,17 +13,9 @@ public interface IHttpClientFactory
     (HttpMessageInvoker httpClient, HttpTransformer transformer) Create(ForwarderOption forwarderOption);
 }
 
-public class HttpClientFactory : IHttpClientFactory
+public class HttpClientFactory(ITransformBuilder transformBuilder, IServiceProvider serviceProvider)
+    : IHttpClientFactory
 {
-    private readonly ITransformBuilder _transformBuilder;
-    private readonly IServiceProvider _serviceProvider;
-
-    public HttpClientFactory(ITransformBuilder transformBuilder, IServiceProvider serviceProvider)
-    {
-        _transformBuilder = transformBuilder;
-        _serviceProvider = serviceProvider;
-    }
-
     private readonly ConcurrentDictionary<ForwarderOption, (HttpMessageInvoker httpClient, HttpTransformer transformer)>
         _cache = new();
 
@@ -31,16 +23,16 @@ public class HttpClientFactory : IHttpClientFactory
         _cache.GetOrAdd(forwarderOption, key =>
         {
             //ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls12;
-            
+
             var handler =
-                new HttpClientWithLogHandler(_serviceProvider
+                new HttpClientWithLogHandler(serviceProvider
                     .GetRequiredService<ILogger<HttpClientWithLogHandler>>())
                 {
                     UseProxy = false,
                     UseCookies = false,
                     AllowAutoRedirect = false,
                     //MaxAutomaticRedirections = 0,
-                    
+
                     AutomaticDecompression = DecompressionMethods.None,
                     DefaultRequestHeaders = forwarderOption.Headers
                 };
@@ -48,14 +40,17 @@ public class HttpClientFactory : IHttpClientFactory
             //Update SslProtocols
             if (forwarderOption.SslProtocols != null)
             {
-                Console.WriteLine("Update SslProtocols of {0} with {1}",forwarderOption.Route, forwarderOption.SslProtocols);
+                Console.WriteLine("Update SslProtocols of {0} with {1}", forwarderOption.Route,
+                    forwarderOption.SslProtocols);
                 handler.SslProtocols = forwarderOption.SslProtocols.Value;
             }
+
             //Accept all Server Certificate
             if (forwarderOption.AcceptServerCertificate)
             {
                 handler.ServerCertificateCustomValidationCallback = (_, _, _, _) => true;
             }
+
             //Add Client certificate
             if (!string.IsNullOrEmpty(key.ClientCertificate))
             {
@@ -71,7 +66,7 @@ public class HttpClientFactory : IHttpClientFactory
                 : $"/{key.Route.Replace("/{**catch-all}", string.Empty)}";
 
             //Transform prefix
-            var transformer = _transformBuilder.Create(b =>
+            var transformer = transformBuilder.Create(b =>
             {
                 if (!prefix.Equals("/", StringComparison.OrdinalIgnoreCase))
                     b.AddPathRemovePrefix(prefix);

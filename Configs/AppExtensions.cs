@@ -1,13 +1,11 @@
 using Yarp.ReverseProxy.Forwarder;
 using IHttpClientFactory = HBD.YarpProxy.Handlers.IHttpClientFactory;
 
-// ReSharper disable TemplateIsNotCompileTimeConstantProblem
-
 namespace HBD.YarpProxy.Configs;
 
 internal static class AppExtensions
 {
-    public static IEndpointRouteBuilder MapForwarderProxyEndPoints(this IEndpointRouteBuilder endpoints)
+    private static IEndpointRouteBuilder MapForwarderProxyEndPoints(this IEndpointRouteBuilder endpoints)
     {
         var config = endpoints.ServiceProvider.GetRequiredService<IConfiguration>()
             .GetSection(ForwarderProxyOptions.Name)
@@ -28,7 +26,7 @@ internal static class AppExtensions
             {
                 var (httpClient, transformer) = httpClientFactory.Create(op);
 
-                var error = await forwarder.SendAsync(httpContext, op.Destinations, httpClient, requestOptions,
+                var error = await forwarder.SendAsync(httpContext, op.Destination, httpClient, requestOptions,
                     transformer);
 
                 // Check if the proxy operation was successful
@@ -38,7 +36,7 @@ internal static class AppExtensions
                     var exception = errorFeature?.Exception?.InnerException ?? errorFeature?.Exception;
 
                     if (exception != null)
-                        logger.LogError(exception,$"Error at {op.Destinations.First()} is {exception.Message}");
+                        logger.LogError(exception,$"Error at {op.Destination} is {exception.Message}");
                 }
             });
         }

@@ -17,7 +17,7 @@ public record ForwarderOption
     /// <summary>
     /// The destinations to forward to.
     /// </summary>
-    public string[] Destinations { get; set; } = default!;
+    public string Destination { get; set; } = default!;
 
     public IDictionary<string, string> Headers { get; set; } = new Dictionary<string, string>();
     public string? ClientCertificate { get; set; }
@@ -27,5 +27,5 @@ public record ForwarderOption
     
     public bool AcceptServerCertificate { get; set; }
     
-    internal bool IsValid=> !string.IsNullOrWhiteSpace(Route) && Destinations?.Length > 0 && Destinations.All(d=>!string.IsNullOrWhiteSpace(d));
+    internal bool IsValid=> !string.IsNullOrWhiteSpace(Route) && !string.IsNullOrWhiteSpace(Destination);
 }

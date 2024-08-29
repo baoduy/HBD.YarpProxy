@@ -4,13 +4,9 @@ using System.Text;
 
 namespace HBD.YarpProxy.Handlers;
 
-internal class HttpClientWithLogHandler : HttpClientHandler
+internal class HttpClientWithLogHandler(ILogger<HttpClientWithLogHandler> logger) : HttpClientHandler
 {
-    private readonly ILogger<HttpClientWithLogHandler> _logger;
-
     public IDictionary<string, string> DefaultRequestHeaders { get; set; } = new Dictionary<string, string>();
-
-    public HttpClientWithLogHandler(ILogger<HttpClientWithLogHandler> logger) => _logger = logger;
 
     private void TryAddDefaultHeader(HttpRequestMessage request)
     {
@@ -29,7 +25,7 @@ internal class HttpClientWithLogHandler : HttpClientHandler
         if (DefaultRequestHeaders.Any())
             message.Append($" with default headers: {string.Join(", ", DefaultRequestHeaders.Select(h => h.Key))}");
         
-        _logger.LogDebug(message.ToString());
+        logger.LogDebug(message.ToString());
     }
 
     protected override HttpResponseMessage Send(HttpRequestMessage request, CancellationToken cancellationToken)

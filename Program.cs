@@ -4,14 +4,6 @@ using IHttpClientFactory = HBD.YarpProxy.Handlers.IHttpClientFactory;
 
 var builder = WebApplication.CreateBuilder(args);
 var features = builder.Configuration.GetSection(FeatureOptions.Name).Get<FeatureOptions>() ?? new FeatureOptions();
-var appInsights = builder.Configuration.GetSection(AppInsightOptions.Name).Get<AppInsightOptions>();
-
-//Add AppInsights
-if (!string.IsNullOrEmpty(appInsights?.InstrumentationKey))
-{
-    Console.WriteLine("App Insights is enabled.");
-    builder.Services.AddApplicationInsightsTelemetry(appInsights.InstrumentationKey);
-}
 
 builder.Services
     .AddCors(o => o.AddDefaultPolicy(c => c.AllowAnyOrigin()));
@@ -34,10 +26,10 @@ if (features.EnableForwarder)
 
 var app = builder.Build();
 
-if (features.EnableHttpLog)
-{
-    app.UseHttpLogging();
-}
+// if (features.EnableHttpLog)
+// {
+//     app.UseHttpLogging();
+// }
 
 if (features.EnableReverseProxy)
 {

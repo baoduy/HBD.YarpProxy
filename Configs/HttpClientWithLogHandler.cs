@@ -2,7 +2,7 @@
 
 using System.Text;
 
-namespace HBD.YarpProxy.Handlers;
+namespace HBD.YarpProxy.Configs;
 
 internal class HttpClientWithLogHandler(ILogger<HttpClientWithLogHandler> logger) : HttpClientHandler
 {

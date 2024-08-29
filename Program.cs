@@ -1,46 +1,28 @@
+using System.Security.Cryptography.X509Certificates;
 using HBD.YarpProxy.Configs;
-using HBD.YarpProxy.Handlers;
-using IHttpClientFactory = HBD.YarpProxy.Handlers.IHttpClientFactory;
+using IHttpClientFactory = HBD.YarpProxy.Configs.IHttpClientFactory;
+
+const string clientCertKey = "ClientCert";
+const string clientCertPass = "ClientCertPass";
 
 var builder = WebApplication.CreateBuilder(args);
-var features = builder.Configuration.GetSection(FeatureOptions.Name).Get<FeatureOptions>() ?? new FeatureOptions();
-
-builder.Services
-    .AddCors(o => o.AddDefaultPolicy(c => c.AllowAnyOrigin()));
-
 builder.Services.AddSingleton<IHttpClientFactory, HttpClientFactory>();
 
-if (features.EnableReverseProxy)
-{
-    //Note All the configuration already added no need to config anything here: https://docs.microsoft.com/en-us/aspnet/core/fundamentals/configuration/?view=aspnetcore-6.0#default-configuration
-    builder.Services
-        .AddReverseProxy()
-        .LoadFromConfig(builder.Configuration.GetSection("ReverseProxy"));
-}
+//Add ReverseProxy
+builder.Services.AddReverseProxy()
+    .LoadFromConfig(builder.Configuration.GetSection("ReverseProxy"))
+    .ConfigureHttpClient((context, handler) =>
+    {
+        if (context.NewMetadata == null || !context.NewMetadata.TryGetValue(clientCertKey, out var cert64)) return;
+        context.NewMetadata.TryGetValue(clientCertPass, out var pass);
+        var cert = new X509Certificate2(Convert.FromBase64String(cert64), pass);
 
-if (features.EnableForwarder)
-{
-    builder.Services
-        .AddHttpForwarder();
-}
+        handler.SslOptions.CertificateRevocationCheckMode = X509RevocationMode.NoCheck;
+        handler.SslOptions.ClientCertificates ??= new X509CertificateCollection();
+        handler.SslOptions.ClientCertificates.Add(cert);
+    });
 
 var app = builder.Build();
-
-// if (features.EnableHttpLog)
-// {
-//     app.UseHttpLogging();
-// }
-
-if (features.EnableReverseProxy)
-{
-    Console.WriteLine("Reverse Proxy is enabled.");
-    app.MapReverseProxy();
-}
-
-if (features.EnableForwarder)
-{
-    Console.WriteLine("Forwarder is enabled.");
-    app.MapForwarderProxy();
-}
-
+app.MapReverseProxy();
+app.MapForwarderProxy();
 app.Run();

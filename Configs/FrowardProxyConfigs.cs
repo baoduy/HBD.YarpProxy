@@ -1,26 +1,41 @@
 using Yarp.ReverseProxy.Forwarder;
-using IHttpClientFactory = HBD.YarpProxy.Handlers.IHttpClientFactory;
 
 namespace HBD.YarpProxy.Configs;
 
-internal static class AppExtensions
+public class FrowardProxyItem
+{
+    public string Route { get; set; } = default!;
+    public string Destination { get; set; } = default!;
+    public Dictionary<string, string> Headers { get; set; } = new();
+
+    public string? ClientCert { get; set; }
+    public string? ClientCertPass { get; set; }
+}
+
+public class FrowardProxyOps : List<FrowardProxyItem>
+{
+    public static string Name => "ForwarderProxy";
+}
+
+public static class FrowardProxyConfigs
 {
     private static IEndpointRouteBuilder MapForwarderProxyEndPoints(this IEndpointRouteBuilder endpoints)
     {
+        var logger = endpoints.ServiceProvider.GetRequiredService<ILogger<FrowardProxyOps>>();
         var config = endpoints.ServiceProvider.GetRequiredService<IConfiguration>()
-            .GetSection(ForwarderProxyOptions.Name)
-            .Get<ForwarderProxyOptions>();
+            .GetSection(FrowardProxyOps.Name)
+            .Get<FrowardProxyOps>();
 
-        if (config==null|| !config.Any()) return endpoints;
+        if (config == null || !config.Any()) return endpoints;
 
-        var logger = endpoints.ServiceProvider.GetRequiredService<ILogger<ForwarderOption>>();
+
         var forwarder = endpoints.ServiceProvider.GetRequiredService<IHttpForwarder>();
         var httpClientFactory = endpoints.ServiceProvider.GetRequiredService<IHttpClientFactory>();
         // Setup our own request transform class
 
         var requestOptions = new ForwarderRequestConfig { ActivityTimeout = TimeSpan.FromSeconds(200) };
 
-        foreach (var op in config.Where(c=>c.IsValid))
+        foreach (var op in config)
         {
             endpoints.Map(op.Route, async httpContext =>
             {
@@ -36,7 +51,7 @@ internal static class AppExtensions
                     var exception = errorFeature?.Exception?.InnerException ?? errorFeature?.Exception;
 
                     if (exception != null)
-                        logger.LogError(exception,$"Error at {op.Destination} is {exception.Message}");
+                        logger.LogError(exception, $"Error at {op.Destination} is {exception.Message}");
                 }
             });
         }
@@ -46,9 +61,7 @@ internal static class AppExtensions
 
     public static WebApplication MapForwarderProxy(this WebApplication application)
     {
-        application
-            .UseRouting()
-            .UseEndpoints(endpoints => endpoints.MapForwarderProxyEndPoints());
+        application.MapForwarderProxyEndPoints();
         return application;
     }
 }

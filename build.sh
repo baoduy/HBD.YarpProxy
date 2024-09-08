@@ -1,0 +1,1 @@
+docker build -t baoduy2412/hbd.reverse-proxy:latest -f docker.dockerfile .

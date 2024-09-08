@@ -1,1 +1,0 @@
-docker build -t baoduy2412/hbd.reverse-proxy:latest -f docker.dockerfile --build-arg PAT=uccih5xwdqif4kmalvn7krtjjasxa4ki6ydaa7xcoc2r2uyi5jka .

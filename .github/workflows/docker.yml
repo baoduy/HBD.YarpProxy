@@ -1,75 +1,18 @@
-name: Docker
+name: pulumi-docker-build
 
 on:
   push:
-    branches: [ main, master ]
+    branches:
+    - 'main'
 
-env:
-  Docker_File: 'docker.dockerfile'
-  Image_Name: 'baoduy2412/hbd.yarp-proxy'
-  Is_Draft_Release: false
-  
 jobs:
   build:
-
-    runs-on: ubuntu-latest
-
-    steps:
-    - uses: actions/checkout@v3
-    
-     # Versioning
-    - name: Get version and version code
-      uses: xom9ikk/version-by-tag@v1
-      id: versioning
-      with:
-        isUseGithubRunNumber: true
-    
-    - uses: actions-ecosystem/action-bump-semver@v1
-      id: bump-semver
-      with:
-        current_version: ${{ steps.versioning.outputs.semver }}
-        level: patch
-          
-    - name: Print Version
-      run: |
-        echo "Tag: ${{ steps.versioning.outputs.tag }}"
-        echo "Semver: ${{ steps.versioning.outputs.semver }}"
-        echo "Version code: ${{ steps.versioning.outputs.versionCode }}"
-        echo "New version: ${{ steps.bump-semver.outputs.new_version }}"
-    
-    #Build and Push
-    - name: Docker Login
-      uses: docker/login-action@v2.0.0
-      with:
-        username: baoduy2412
-        password: ${{ secrets.DOCKER_TOKEN }}
-        ecr: auto
-        logout: true
-    
-    - name: docker pull cache image
-      run: docker pull ${{ env.Image_Name }}:latest
-            
-    - name: Build the Docker image
-      run: docker build . --file ${{ env.Docker_File }} --build-arg PAT=${{ secrets.PACKAGE_TOKEN }} 
-        --cache-from=${{ env.Image_Name }}:latest
-        --tag ${{ env.Image_Name }}:${{ steps.bump-semver.outputs.new_version }}
-      
-    - name: Push Image to Docker Hub
-      run: docker tag ${{ env.Image_Name }}:${{ steps.bump-semver.outputs.new_version }} ${{ env.Image_Name }}:latest
-      
-    - name: Push Image to Docker Hub
-      run: docker push ${{ env.Image_Name }} --all-tags
-    
-    # Create Release
-    - name: Create Release
-      id: create_release
-      uses: actions/create-release@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.PACKAGE_TOKEN }}
-      with:
-        tag_name: ${{ steps.bump-semver.outputs.new_version }}
-        release_name: Release ${{ steps.bump-semver.outputs.new_version }}
-        draft: ${{ env.Is_Draft_Release }}
-        prerelease: false
-      
-      
+    uses: baoduy/ShareWorkflows/.github/workflows/docker-publish.yaml@main
+    with:
+      dockerFile: 'docker.dockerfile'
+      context: '.'
+      imageName: 'baoduy2412/hbd.yarp-proxy'
+      platforms: linux/arm64,linux/amd64
+    secrets:
+      DOCKER_USERNAME: baoduy2412
+      DOCKER_TOKEN: ${{ secrets.DOCKER_TOKEN }}

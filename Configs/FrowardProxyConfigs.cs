@@ -1,3 +1,4 @@
+using System.Security.Authentication;
 using Yarp.ReverseProxy.Forwarder;
 
 namespace HBD.YarpProxy.Configs;
@@ -10,6 +11,10 @@ public class FrowardProxyItem
 
     public string? ClientCert { get; set; }
     public string? ClientCertPass { get; set; }
+
+    public SslProtocols? SslProtocols { get; set; }
+
+    public bool? AcceptServerCertificate { get; set; }
 }
 
 public class FrowardProxyOps : List<FrowardProxyItem>

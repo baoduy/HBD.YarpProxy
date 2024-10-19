@@ -21,7 +21,7 @@ public class HttpClientFactory(ITransformBuilder transformBuilder, IServiceProvi
     public (HttpMessageInvoker httpClient, HttpTransformer transformer) Create(FrowardProxyItem ops) =>
         _cache.GetOrAdd(ops.Route, k =>
         {
-            //ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls12;
+            ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12 | SecurityProtocolType.Tls13;
 
             var handler =
                 new HttpClientWithLogHandler(serviceProvider
@@ -31,31 +31,32 @@ public class HttpClientFactory(ITransformBuilder transformBuilder, IServiceProvi
                     UseCookies = false,
                     AllowAutoRedirect = false,
                     //MaxAutomaticRedirections = 0,
-
                     AutomaticDecompression = DecompressionMethods.None,
                     DefaultRequestHeaders = ops.Headers
                 };
 
             //Update SslProtocols
-            // if (forwarderOption.SslProtocols != null)
-            // {
-            //     Console.WriteLine("Update SslProtocols of {0} with {1}", forwarderOption.Route,
-            //         forwarderOption.SslProtocols);
-            //     handler.SslProtocols = forwarderOption.SslProtocols.Value;
-            // }
-            //
-            // //Accept all Server Certificate
-            // if (forwarderOption.AcceptServerCertificate)
-            // {
-            //     handler.ServerCertificateCustomValidationCallback = (_, _, _, _) => true;
-            // }
+            if (ops.SslProtocols != null)
+            {
+                Console.WriteLine("{0}: Update SslProtocols with {1}", ops.Route, ops.SslProtocols);
+                handler.SslProtocols = ops.SslProtocols.Value;
+            }
+
+            //Accept all Server Certificate
+            if (ops.AcceptServerCertificate ==true)
+            {
+                Console.WriteLine("{0}: AcceptServerCertificate", ops.Route);
+                handler.ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator;
+            }
 
             //Add Client certificate
             if (!string.IsNullOrEmpty(ops.ClientCert))
             {
-                handler.ClientCertificateOptions = ClientCertificateOption.Manual;
+                Console.WriteLine("{0}: Added ClientCert", ops.Route);
+
+                handler.ClientCertificateOptions = ClientCertificateOption.Automatic;
                 handler.ClientCertificates.Add(new X509Certificate2(Convert.FromBase64String(ops.ClientCert),
-                    ops.ClientCertPass));
+                    ops.ClientCertPass,X509KeyStorageFlags.MachineKeySet | X509KeyStorageFlags.PersistKeySet));
             }
 
             var httpClient = new HttpMessageInvoker(handler);
